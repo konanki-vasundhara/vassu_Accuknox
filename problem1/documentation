@@ -1,0 +1,50 @@
+Accuknox DevOps Trainee Practical Assessment
+  
+Problem Statement - 1:
+
+Title: Containerisation and Deployment of Wisecow Application on Kubernetes
+Project Repository: https://github.com/nyrahul/wisecow Wisecow App
+Objective: To containerize and deploy the Wisecow application, hosted in the abovementioned GitHub repository, on a Kubernetes environment (e.g., a Kind / Minikube
+cluster) with secure TLS communication.
+Requirements:
+Dockerization:
+● Develop a Dockerfile for creating a container image of the Wisecow
+application.
+
+  
+Step-1:
+Installation :
+1. Install git : yum install git -y
+2. install docker : yum install docker -y
+3. To start docker : systemctl start docker
+4. To check status : systemctl status docker
+
+  
+Cloning of repository :
+Git clone https://github.com/nyrahul/wisecow.git
+
+Create a Dockerfile
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PORT=4499
+RUN apt-get update && \
+ apt-get install -y --no-install-recommends \
+ fortune-mod cowsay netcat procps ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY wisecow.sh /app/wisecow.sh
+RUN chmod +x /app/wisecow.sh
+EXPOSE 4499
+CMD ["/app/wisecow.sh"]
+
+To build the Dockerfile :
+docker build -t wisecow .
+
+To run :
+Docker run -d --name wisecow -p 4499:4499 wiscow:fixed
+
+To check the logs :
+docker logs -f wisecow
+
+Output:
+After Pushing the image into the Dockerhub:
