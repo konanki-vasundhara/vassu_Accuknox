@@ -1,0 +1,23 @@
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: nginx-zero-trust-policy
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  process:
+    matchPaths:
+    - path: /usr/sbin/nginx
+    - path: /bin/bash
+    action: Allow
+  file:
+    matchPaths:
+    - path: /etc/nginx/nginx.conf
+    - path: /var/log/nginx/access.log
+    - path: /var/log/nginx/error.log
+    action: Allow
+  defaultFilePosture: Block
+  defaultProcessPosture: Block
+  defaultNetworkPosture: Block
