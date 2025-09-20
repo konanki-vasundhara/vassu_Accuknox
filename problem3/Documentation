@@ -1,0 +1,146 @@
+Accuknox DevOps Trainee Practical Assessment 
+
+Problem Statement -3 :
+1.Write a zero-trust KubeArmor policy for the Kubernetes workload you deployed in PS1.
+2.Everything you'll need is available here: https://docs.kubearmor.io/kubearmor/
+3.Apply the policy to your cluster.
+4.Capture a screenshot showcasing policy violations.
+5.Commit your policy YAML and the screenshot to your forked repo.
+
+Installation steps:
+
+Step -1:
+
+Create a minikube cluster 
+
+yum install docker -y
+systemctl start docker
+systemctl status docker
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo mv kubectl /usr/local/bin/kubectl
+sudo chmod +x /usr/local/bin/kubectl
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+sudo yum install iptables -y
+yum install conntrack -y
+minikube start --driver=docker --force
+minikube status 
+
+
+Step -2:
+
+Install helm:
+
+helm repo add kubearmor https://helm.kubearmor.io
+
+
+Step -3:
+
+Install karmor CLI tool.
+
+curl -sfL http://get.kubearmor.io/ | sh -s -- -b /usr/local/bin
+
+
+
+
+
+Process:
+
+Step -1:
+
+Deploy a Kubernetes Workload  ---> Here I have deployed in nginx image
+
+nginx-deployment.yaml:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+Apply the deployment to your cluster:
+
+kubectl apply -f nginx-deployment.yaml
+
+
+Verify that pod is running or not:
+
+kubectl get pods -l app=nginx
+
+Step 2: Write a Zero-Trust KubeArmor Policy
+
+Create a file  with name nginx-zero-trust-policy.yaml :
+
+policy will:
+
+
+
+
+·  Apply to pods with the label app: nginx.
+·  Allow the nginx process to execute.
+·  Block all other process executions and file operations.
+nginx-zero-trust-policy.yaml
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: nginx-zero-trust-policy
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  process:
+    matchPaths:
+    - path: /usr/sbin/nginx
+    - path: /bin/bash
+    action: Allow
+  file:
+    matchPaths:
+    - path: /etc/nginx/nginx.conf
+    - path: /var/log/nginx/access.log
+    - path: /var/log/nginx/error.log
+    action: Allow
+  defaultFilePosture: Block
+  defaultProcessPosture: Block
+  defaultNetworkPosture: Block
+
+Apply the policy to the  cluster:
+kubectl apply -f nginx-zero-trust-policy.yaml
+
+
+
+Step -3 :
+
+ Trigger and Capture Policy Violations
+
+Firstly get the name of the Nginx pod:
+
+kubectl get pods -l app=nginx
+
+Execute the pod :
+
+kubectl exec -it podname here -- bash
+
+Inside the container, try to run a blocked command:
+
+Whoami
+
+Output:  
+
